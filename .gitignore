@@ -1,0 +1,12 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.DS_Store
+build/
+ios/App/Pods/
+ios/App/build/
+*.p12
+*.p8
+*.mobileprovision
+*.ipa
