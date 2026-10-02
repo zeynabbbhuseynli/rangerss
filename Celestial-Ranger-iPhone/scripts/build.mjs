@@ -1,0 +1,12 @@
+import fs from 'node:fs/promises';
+import {build} from 'esbuild';
+await fs.mkdir('www',{recursive:true});
+await fs.cp('src/assets','www/assets',{recursive:true});
+const config={apiBase:process.env.RANGER_API_URL||''};
+if(config.apiBase && !/^https:\/\//.test(config.apiBase)) throw Error('RANGER_API_URL must use HTTPS');
+await fs.copyFile('src/index.html','www/index.html');
+await fs.copyFile('src/upgrade.css','www/upgrade.css');
+const app=(await fs.readFile('src/app-base.js','utf8')).replace('__UPGRADES__',await fs.readFile('src/upgrades.js','utf8'));
+await fs.writeFile('www/app.js','window.rangerReady.then(function(){\n'+app+'\n});');
+await build({entryPoints:['src/native.js'],bundle:true,outfile:'www/native.js',format:'iife',target:'safari15',define:{RANGER_CONFIG:JSON.stringify(config)}});
+console.log('Built bundled iPhone app assets.');

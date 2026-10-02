@@ -1,0 +1,71 @@
+workflows:
+  ios-validate:
+    name: Ranger - compile iPhone beta (no signing)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      node: 22
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Install and check adventure
+        script: |
+          set -e
+          npm ci
+          npm run build
+          npm run check
+          npx cap sync ios
+      - name: Compile for iPhone simulator
+        script: |
+          set -e
+          xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build/simulator CODE_SIGNING_ALLOWED=NO build
+    artifacts:
+      - build/simulator/Build/Products/Debug-iphonesimulator/*.app
+  ios-testflight:
+    name: Ranger - signed TestFlight beta
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      app_store_connect: ranger-apple
+    environment:
+      node: 22
+      xcode: latest
+      cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.zeynabhuseynli.celestialranger
+      groups:
+        - ranger_release
+    scripts:
+      - name: Verify release setup
+        script: |
+          set -e
+          test -n "$APP_STORE_APPLE_ID" || { echo 'Set APP_STORE_APPLE_ID in the ranger_release group.'; exit 1; }
+      - name: Install and check adventure
+        script: |
+          set -e
+          npm ci
+          npm run build
+          npm run check
+          npx cap sync ios
+      - name: Apply Apple signing profiles
+        script: xcode-project use-profiles
+      - name: Set unique beta build number
+        script: |
+          set -e
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID")
+          cd ios/App
+          agvtool new-version -all $((LATEST + 1))
+      - name: Archive and export signed IPA
+        script: |
+          set -e
+          cd ios/App
+          xcode-project build-ipa --workspace App.xcworkspace --scheme App
+    artifacts:
+      - ios/App/build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        submit_to_app_store: false

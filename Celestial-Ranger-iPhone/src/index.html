@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Celestial Ranger Program: Epic Universe</title>
+
+
+
+<style>
+  :root{
+    --navy-deep:#0a0e2a;
+    --navy-mid:#171135;
+    --purple:#2a1f52;
+    --purple-soft:#352a63;
+    --gold:#e8b256;
+    --gold-soft:#f3cf8c;
+    --green:#3fa66b;
+    --green-soft:#8fd1ab;
+    --cream:#f4f0e3;
+    --cream-dim:#cfc9ea;
+    --coral:#e8825e;
+    --line: rgba(244,240,227,0.14);
+    --radius-lg:22px;
+    --radius-md:14px;
+    --radius-sm:9px;
+    --shadow-deep: 0 18px 40px rgba(5,4,20,0.55);
+    --star-opacity:0.55;
+    box-sizing:border-box;
+    padding-top: env(safe-area-inset-top,0px);
+    padding-bottom: env(safe-area-inset-bottom,0px);
+  }
+  html{ scroll-padding-top: env(safe-area-inset-top,0px); }
+  *,*::before,*::after{ box-sizing:inherit; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    font-family:'Nunito',sans-serif;
+    color:var(--cream);
+    background:
+      radial-gradient(circle at 15% 8%, rgba(232,178,86,0.08), transparent 40%),
+      radial-gradient(circle at 85% 92%, rgba(63,166,107,0.10), transparent 45%),
+      linear-gradient(160deg, var(--navy-deep) 0%, var(--navy-mid) 55%, var(--purple) 100%);
+    background-attachment:fixed;
+    min-height:100%;
+    overflow-x:hidden;
+    position:relative;
+    transition:background 0.6s ease;
+  }
+  body.night{
+    background:
+      radial-gradient(circle at 20% 10%, rgba(143,209,171,0.10), transparent 40%),
+      radial-gradient(circle at 80% 85%, rgba(232,178,86,0.07), transparent 45%),
+      linear-gradient(165deg, #05061a 0%, #0c0a28 50%, #190f3a 100%);
+  }
+  /* starfield */
+  .stars{
+    position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image:
+      radial-gradient(1.5px 1.5px at 20px 30px, var(--cream) 50%, transparent 51%),
+      radial-gradient(1px 1px at 120px 80px, var(--cream) 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 200px 150px, var(--gold-soft) 50%, transparent 51%),
+      radial-gradient(1px 1px at 60px 180px, var(--cream) 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 260px 40px, var(--cream) 50%, transparent 51%),
+      radial-gradient(1px 1px at 320px 220px, var(--cream) 50%, transparent 51%),
+      radial-gradient(1.5px 1.5px at 30px 260px, var(--gold-soft) 50%, transparent 51%),
+      radial-gradient(1px 1px at 160px 260px, var(--cream) 50%, transparent 51%);
+    background-repeat:repeat;
+    background-size:360px 300px;
+    opacity:var(--star-opacity);
+  }
+  body.night .stars{ opacity:0.9; }
+
+  h1,h2,h3,.display{ font-family:'Fraunces',serif; font-weight:600; margin:0; letter-spacing:0.01em; }
+
+  button{ font-family:inherit; }
+
+  /* app shell */
+  #app{ position:relative; z-index:1; max-width:460px; margin:0 auto; min-height:100%; display:flex; flex-direction:column; }
+
+  .topbar{
+    position:sticky; top:0; z-index:5;
+    padding: calc(12px + env(safe-area-inset-top,0px)) 16px 10px;
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    background:linear-gradient(180deg, rgba(10,14,42,0.92), rgba(10,14,42,0.55) 80%, transparent);
+    backdrop-filter:blur(6px);
+  }
+  .brand{ display:flex; align-items:center; gap:8px; }
+  .brand-mark{ font-size:22px; line-height:1; }
+  .brand-text{ font-family:'Fraunces',serif; font-size:16px; font-weight:600; color:var(--gold-soft); }
+  .toggles{ display:flex; gap:6px; }
+  .pill-toggle{
+    display:flex; background:rgba(244,240,227,0.08); border:1px solid var(--line);
+    border-radius:999px; padding:3px; gap:2px;
+  }
+  .pill-btn{
+    border:none; background:transparent; color:var(--cream-dim); font-weight:700; font-size:12px;
+    padding:6px 10px; border-radius:999px; cursor:pointer; transition:all .25s ease;
+  }
+  .pill-btn.active{ background:var(--gold); color:#2a1a04; }
+  .pill-btn.active.night-active{ background:var(--purple-soft); color:var(--gold-soft); }
+
+  main{ flex:1; padding:4px 16px 100px; }
+  .screen{ display:none; animation:fadein .35s ease; }
+  .screen.visible{ display:block; }
+  @keyframes fadein{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+  .card{
+    background:linear-gradient(165deg, rgba(53,42,99,0.85), rgba(42,31,82,0.78));
+    border:1px solid var(--line);
+    border-radius:var(--radius-lg);
+    padding:18px;
+    box-shadow:var(--shadow-deep);
+    margin-bottom:16px;
+  }
+  .card.flush{ padding:0; overflow:hidden; position:relative; }
+  .eyebrow-free h2{ font-size:22px; }
+
+  .sub{ color:var(--cream-dim); font-size:14px; line-height:1.5; }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    border:none; cursor:pointer; border-radius:999px; font-weight:800;
+    padding:13px 22px; font-size:15px; transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:active{ transform:scale(0.97); }
+  .btn-primary{ background:linear-gradient(135deg,var(--gold-soft),var(--gold)); color:#2a1a04; box-shadow:0 8px 20px rgba(232,178,86,0.25); }
+  .btn-primary:disabled{ opacity:0.4; cursor:not-allowed; box-shadow:none; }
+  .btn-ghost{ background:rgba(244,240,227,0.08); color:var(--cream); border:1px solid var(--line); }
+  .btn-green{ background:linear-gradient(135deg,var(--green-soft),var(--green)); color:#082d17; }
+  .btn-block{ width:100%; }
+  .btn-sm{ padding:8px 14px; font-size:13px; }
+
+  /* ONBOARDING */
+  .onboard-hero{ text-align:center; padding:28px 6px 6px; }
+  .onboard-hero .glyph{ font-size:52px; display:block; margin-bottom:10px; filter:drop-shadow(0 6px 14px rgba(232,178,86,0.35)); }
+  .onboard-hero h1{ font-size:28px; color:var(--gold-soft); line-height:1.15; }
+  .onboard-hero p{ color:var(--cream-dim); margin-top:8px; font-size:14.5px; }
+
+  .oath-box{
+    border:1px dashed rgba(232,178,86,0.45); border-radius:var(--radius-md);
+    padding:16px; background:rgba(232,178,86,0.05); margin:14px 0;
+  }
+  .oath-box h3{ color:var(--gold-soft); font-size:15px; margin-bottom:6px; }
+  .oath-box p{ font-style:italic; font-size:14.5px; line-height:1.6; color:var(--cream); }
+
+  .name-field{
+    width:100%; padding:13px 14px; border-radius:var(--radius-md); border:1px solid var(--line);
+    background:rgba(5,4,20,0.35); color:var(--cream); font-size:15px; margin:10px 0 4px;
+  }
+  .name-field::placeholder{ color:rgba(244,240,227,0.45); }
+  textarea.name-field{ font-family:inherit; resize:vertical; line-height:1.4; }
+  .edit-label{ display:block; font-size:11px; font-weight:800; color:var(--gold-soft); margin:10px 0 2px; }
+
+  .oath-check{ display:flex; align-items:flex-start; gap:10px; margin:14px 0; cursor:pointer; }
+  .oath-check input{ width:20px; height:20px; margin-top:2px; accent-color:var(--gold); flex-shrink:0; }
+  .oath-check span{ font-size:14px; color:var(--cream-dim); }
+
+  .mode-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin:14px 0; }
+  .mode-card{
+    border:1.5px solid var(--line); border-radius:var(--radius-md); padding:12px 8px; text-align:center;
+    background:rgba(244,240,227,0.04); cursor:pointer; transition:all .2s ease;
+  }
+  .mode-card .ic{ font-size:26px; display:block; margin-bottom:6px; }
+  .mode-card .lbl{ font-size:12.5px; font-weight:800; color:var(--cream); }
+  .mode-card.selected{ border-color:var(--gold); background:rgba(232,178,86,0.14); }
+
+  .interest-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .interest-chip{
+    display:flex; align-items:center; gap:9px; border:1.5px solid var(--line); border-radius:var(--radius-md);
+    padding:11px 10px; background:rgba(244,240,227,0.04); cursor:pointer; transition:all .2s ease;
+  }
+  .interest-chip .ic{ font-size:19px; flex-shrink:0; }
+  .interest-chip .lbl{ font-size:12px; font-weight:800; line-height:1.25; }
+  .interest-chip.selected{ border-color:var(--gold); background:rgba(232,178,86,0.14); }
+  .interest-badge{
+    font-size:10px; font-weight:800; color:#2a1a04; background:var(--gold-soft);
+    padding:2px 7px; border-radius:999px; margin-left:6px; white-space:nowrap;
+  }
+  .interests-edit-panel{ display:none; margin-bottom:14px; }
+  .interests-edit-panel.open{ display:block; }
+
+  /* BOTTOM NAV */
+  .bottomnav{
+    position:fixed; left:0; right:0; bottom:0; z-index:6;
+    padding: 8px 14px calc(10px + env(safe-area-inset-bottom,0px));
+    background:linear-gradient(0deg, rgba(10,9,30,0.96), rgba(10,9,30,0.75));
+    backdrop-filter:blur(8px); border-top:1px solid var(--line);
+    display:none;
+  }
+  .bottomnav.visible{ display:flex; }
+  .bottomnav-inner{ max-width:460px; margin:0 auto; display:flex; width:100%; gap:4px; }
+  .navbtn{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;
+    background:none; border:none; color:var(--cream-dim); cursor:pointer; padding:6px 2px; border-radius:12px;
+  }
+  .navbtn .ic{ font-size:20px; }
+  .navbtn .lbl{ font-size:10.5px; font-weight:700; }
+  .navbtn.active{ color:var(--gold-soft); background:rgba(232,178,86,0.1); }
+
+  /* MAP */
+  .map-wrap{ position:relative; border-radius:var(--radius-lg); overflow:hidden; border:1px solid var(--line); box-shadow:var(--shadow-deep); }
+  .map-wrap{ height:72vw; max-height:460px; min-height:340px; }
+  .map-pan{ width:100%; height:100%; }
+  .map-wrap svg{ display:block; width:100%; height:100%; }
+  .pulse{ animation:pulse 1.8s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:1; r:9;} 50%{ opacity:0.5; r:13;} }
+  .glow-dot{ filter:drop-shadow(0 0 6px rgba(232,178,86,0.8)); }
+
+  .disclaimer{ font-size:11px; line-height:1.5; color:rgba(207,201,234,0.55); text-align:center; margin:14px 4px 4px; }
+  .sim-note{ font-size:11.5px; line-height:1.5; color:var(--cream-dim); margin:8px 2px 0; }
+  .sim-note b{ color:var(--gold-soft); }
+
+  details.dir-land{
+    border:1px solid var(--line); border-radius:var(--radius-md); margin-bottom:10px;
+    padding:12px 14px; background:rgba(244,240,227,0.04);
+  }
+  details.dir-land summary{
+    cursor:pointer; font-weight:800; font-size:14px; color:var(--gold-soft); list-style:none;
+  }
+  details.dir-land summary::-webkit-details-marker{ display:none; }
+  details.dir-land[open] summary{ margin-bottom:8px; }
+  .dir-group{ margin-top:10px; }
+  .dir-label{ font-size:10.5px; font-weight:800; color:var(--cream-dim); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px; }
+  .dir-group ul{ margin:0 0 4px; padding-left:18px; font-size:13px; line-height:1.65; color:var(--cream); }
+  .dir-price{ color:var(--gold-soft); font-size:11px; font-weight:700; margin-left:3px; }
+
+  .map-zoom-controls{ position:absolute; z-index:3; top:10px; right:10px; display:flex; flex-direction:column; gap:6px; }
+  .zbtn{
+    width:30px; height:30px; border-radius:9px; border:1px solid var(--line); background:rgba(10,9,30,0.65);
+    color:var(--cream); font-size:15px; font-weight:800; cursor:pointer; backdrop-filter:blur(3px);
+  }
+  .map-wrap{ position:relative; touch-action:none; }
+  .map-pan{ transform-origin:0 0; cursor:grab; }
+  .map-pan.dragging{ cursor:grabbing; }
+
+  .legend{ display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; font-size:11.5px; color:var(--cream-dim); }
+  .legend span{ display:inline-flex; align-items:center; gap:5px; }
+  .legend i{ width:10px; height:10px; border-radius:50%; display:inline-block; }
+
+  .route-row{
+    display:flex; align-items:center; gap:10px; padding:10px; border-radius:var(--radius-md);
+    background:rgba(244,240,227,0.04); margin-bottom:8px; border:1px solid var(--line);
+  }
+  .route-row.included{ border-color:rgba(143,209,255,0.5); background:rgba(143,209,255,0.08); }
+  .route-row .rbadge{
+    width:22px; height:22px; border-radius:50%; background:rgba(143,209,255,0.18); color:#8fd1ff;
+    font-weight:800; font-size:11px; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .route-row .rname{ flex:1; font-weight:700; font-size:13.5px; }
+  .route-row .rbtns{ display:flex; gap:4px; }
+  .route-row .rbtn{
+    width:26px; height:26px; border-radius:7px; border:none; background:rgba(244,240,227,0.08);
+    color:var(--cream); font-size:13px; cursor:pointer;
+  }
+  .route-row .rbtn:disabled{ opacity:0.3; cursor:default; }
+
+  .booth-row{
+    display:flex; align-items:center; gap:12px; padding:13px 10px; border-radius:var(--radius-md);
+    background:rgba(244,240,227,0.04); margin-bottom:8px; cursor:pointer; border:1px solid transparent;
+    transition:all .2s ease;
+  }
+  .booth-row:active{ transform:scale(0.985); }
+  .booth-row.stamped{ border-color:rgba(63,166,107,0.5); background:rgba(63,166,107,0.08); }
+  .booth-row .bicon{
+    width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:22px; background:rgba(232,178,86,0.12); flex-shrink:0; border:1px solid var(--line);
+  }
+  .booth-row .binfo{ flex:1; min-width:0; }
+  .booth-row .bname{ font-weight:800; font-size:14.5px; }
+  .booth-row .bsub{ font-size:12px; color:var(--cream-dim); }
+  .booth-row .bcheck{ font-size:18px; color:var(--green-soft); flex-shrink:0; }
+  .booth-row .bdist{ font-size:11px; color:var(--gold-soft); font-weight:700; white-space:nowrap; }
+
+  /* FLOATING BUDDY COMPANION */
+  .buddy-panel{
+    position:fixed; left:50%; transform:translateX(-50%);
+    bottom:calc(72px + env(safe-area-inset-bottom,0px));
+    width:calc(100% - 28px); max-width:432px; z-index:8;
+    background:linear-gradient(165deg, rgba(53,42,99,0.96), rgba(42,31,82,0.94));
+    border:1px solid rgba(232,178,86,0.4); border-radius:18px;
+    box-shadow:0 14px 34px rgba(5,4,20,0.6);
+    animation:buddyIn .3s ease;
+  }
+  @keyframes buddyIn{ from{opacity:0; transform:translateX(-50%) translateY(10px);} to{opacity:1; transform:translateX(-50%) translateY(0);} }
+  .buddy-row{ display:flex; align-items:flex-start; gap:10px; padding:12px 10px 12px 12px; }
+  .buddy-av{
+    width:40px; height:40px; border-radius:50%; background:var(--purple-soft); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:20px; border:1px solid var(--line);
+  }
+  .buddy-body{ flex:1; min-width:0; }
+  .buddy-who{ font-size:11px; font-weight:800; color:var(--gold-soft); margin-bottom:2px; }
+  .buddy-text{ font-size:13.5px; line-height:1.4; color:var(--cream); }
+  .buddy-controls{ display:flex; flex-direction:column; gap:4px; flex-shrink:0; }
+  .bctrl{
+    width:26px; height:26px; border-radius:7px; border:none; background:rgba(244,240,227,0.08);
+    color:var(--cream-dim); font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .bctrl.active-off{ opacity:0.4; }
+
+  .buddy-bubble{
+    position:fixed; right:16px; bottom:calc(76px + env(safe-area-inset-bottom,0px)); z-index:8;
+    width:50px; height:50px; border-radius:50%; border:1px solid rgba(232,178,86,0.5);
+    background:linear-gradient(165deg, rgba(53,42,99,0.96), rgba(42,31,82,0.94));
+    box-shadow:0 10px 24px rgba(5,4,20,0.5); font-size:22px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .buddy-dot{ position:absolute; top:4px; right:4px; width:10px; height:10px; border-radius:50%; background:var(--coral); border:2px solid var(--navy-deep); }
+
+  .tips-strip{ display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; margin:-2px -2px 4px; }
+  .tip-chip{
+    flex:0 0 auto; min-width:168px; background:rgba(42,31,82,0.75); border:1px solid var(--line);
+    border-radius:var(--radius-md); padding:12px; font-size:12.5px;
+  }
+  .tip-chip .tt{ font-weight:800; color:var(--gold-soft); font-size:12.5px; margin-bottom:3px; display:flex; align-items:center; gap:5px; }
+  .tip-chip .tb{ color:var(--cream-dim); line-height:1.4; }
+
+  .section-title{ display:flex; align-items:center; justify-content:space-between; margin:4px 0 10px; }
+  .section-title h2{ font-size:19px; }
+  .section-title .meta{ font-size:12px; color:var(--cream-dim); font-weight:700; }
+
+  /* BOOTH DETAIL */
+  .booth-hero{
+    padding:20px 18px 26px; text-align:center; position:relative;
+    background:radial-gradient(circle at 50% 0%, rgba(232,178,86,0.18), transparent 60%);
+  }
+  .booth-hero .plant-photo-wrap{ position:relative; display:inline-block; margin-bottom:10px; }
+  .booth-hero .plant-photo{
+    width:200px; height:150px; object-fit:cover; border-radius:16px;
+    border:2px solid rgba(232,178,86,0.4); box-shadow:0 10px 24px rgba(5,4,20,0.5);
+    display:block;
+  }
+  .booth-hero.glowing .plant-photo{ box-shadow:0 0 26px rgba(143,209,171,0.75), 0 10px 24px rgba(5,4,20,0.5); }
+  .booth-hero .plant-emoji-badge{
+    position:absolute; bottom:-8px; right:-8px; width:36px; height:36px; border-radius:50%;
+    background:var(--navy-deep); border:2px solid var(--gold-soft); display:flex; align-items:center;
+    justify-content:center; font-size:18px;
+  }
+  .booth-hero .plant-emoji{ font-size:64px; display:block; margin-bottom:8px; }
+  .booth-hero.glowing .plant-emoji{ filter:drop-shadow(0 0 18px rgba(143,209,171,0.9)); }
+  .booth-hero .portal-tag{ font-size:12.5px; font-weight:800; color:var(--gold-soft); letter-spacing:0.02em; }
+  .booth-hero h2{ font-size:23px; margin-top:4px; }
+  .photo-caption{ font-size:10.5px; color:var(--cream-dim); text-align:center; margin:-6px 0 2px; font-style:italic; }
+
+  .speech{
+    display:flex; gap:10px; align-items:flex-start; padding:14px; border-radius:var(--radius-md);
+    background:rgba(244,240,227,0.05); border:1px solid var(--line); margin-bottom:12px;
+  }
+  .speech .av{ width:38px; height:38px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:19px; background:var(--purple-soft); border:1px solid var(--line); }
+  .speech .who{ font-weight:800; font-size:13px; color:var(--gold-soft); margin-bottom:2px; }
+  .speech .txt{ font-size:14px; line-height:1.5; color:var(--cream); }
+
+  .clue-box{
+    border:1px solid rgba(232,178,86,0.4); border-radius:var(--radius-md); padding:14px;
+    background:rgba(232,178,86,0.06); margin-bottom:12px;
+  }
+  .clue-box .ct{ font-weight:800; color:var(--gold-soft); font-size:13px; margin-bottom:5px; }
+  .clue-box p{ font-size:14px; line-height:1.5; margin:0; }
+
+  .trivia-opts{ display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+  .trivia-opt{
+    text-align:left; padding:12px 14px; border-radius:var(--radius-md); border:1px solid var(--line);
+    background:rgba(244,240,227,0.04); color:var(--cream); cursor:pointer; font-size:14px; font-weight:700;
+  }
+  .trivia-opt.correct{ border-color:var(--green-soft); background:rgba(63,166,107,0.18); }
+  .trivia-opt.wrong{ border-color:var(--coral); background:rgba(232,130,94,0.15); opacity:0.8; }
+  .trivia-feedback{ margin-top:10px; font-size:13.5px; font-weight:700; color:var(--green-soft); }
+
+  .backlink{ display:inline-flex; align-items:center; gap:4px; color:var(--cream-dim); font-size:13px; font-weight:700; background:none; border:none; cursor:pointer; padding:6px 0 10px; }
+
+  /* PASSPORT */
+  .stamp-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .stamp-slot{
+    aspect-ratio:1; border-radius:50%; border:2.5px dashed rgba(244,240,227,0.25);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:3px;
+    font-size:11px; color:var(--cream-dim); padding:6px;
+  }
+  .stamp-slot.filled{
+    border-style:solid; border-color:var(--gold-soft); background:radial-gradient(circle,rgba(232,178,86,0.22),rgba(232,178,86,0.04));
+    color:var(--gold-soft); transform:rotate(-3deg);
+  }
+  .stamp-slot .se{ font-size:26px; }
+  .stamp-slot .sn{ font-weight:800; font-size:10.5px; }
+
+  /* FOOD */
+  .food-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .food-card{
+    border-radius:var(--radius-md); border:1.5px solid var(--line); background:rgba(244,240,227,0.04);
+    padding:14px 10px; text-align:center; cursor:pointer; transition:all .2s ease;
+  }
+  .food-card.selected{ border-color:var(--gold); background:rgba(232,178,86,0.14); }
+  .food-card .fe{ font-size:30px; display:block; margin-bottom:6px; }
+  .food-card .fn{ font-weight:800; font-size:13px; }
+  .food-card .fp{ font-size:11.5px; color:var(--cream-dim); margin-top:2px; }
+
+  .order-status{
+    border-radius:var(--radius-md); padding:14px; margin-top:4px;
+    background:rgba(63,166,107,0.1); border:1px solid rgba(63,166,107,0.4); font-size:14px;
+  }
+  .order-status b{ color:var(--green-soft); }
+
+  /* ECO */
+  .eco-meter{ display:flex; align-items:center; gap:14px; margin-bottom:6px; }
+  .eco-ring{ width:78px; height:78px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px; color:var(--green-soft); background:conic-gradient(var(--green-soft) calc(var(--pct,0)*1%), rgba(244,240,227,0.08) 0); position:relative; }
+  .eco-ring::before{ content:''; position:absolute; inset:7px; border-radius:50%; background:var(--purple); }
+  .eco-ring span{ position:relative; z-index:1; }
+  .badge-row{ display:flex; align-items:center; gap:8px; font-size:13px; font-weight:800; color:var(--gold-soft); }
+  .badge-pill{ padding:5px 12px; border-radius:999px; background:rgba(232,178,86,0.16); border:1px solid rgba(232,178,86,0.4); font-size:12px; }
+
+  .fact-card{ display:flex; gap:10px; align-items:flex-start; padding:12px; border-radius:var(--radius-md); background:rgba(244,240,227,0.04); border:1px solid var(--line); margin-top:10px; }
+  .fact-card .fi{ font-size:20px; }
+  .fact-card p{ margin:0; font-size:13.5px; line-height:1.5; color:var(--cream-dim); }
+
+  /* PLUSHIE */
+  .plushie-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .plushie-card{ text-align:center; padding:18px 10px; border-radius:var(--radius-lg); border:1px solid var(--line); background:rgba(244,240,227,0.04); }
+  .plushie-card .pe{ font-size:40px; display:block; margin-bottom:8px; }
+  .plushie-card h3{ font-size:14.5px; margin-bottom:10px; }
+  .playing{ animation:wiggle 0.5s ease-in-out infinite; }
+  @keyframes wiggle{ 0%,100%{ transform:rotate(-4deg);} 50%{ transform:rotate(4deg);} }
+  .audio-caption{ margin-top:10px; font-size:12.5px; color:var(--gold-soft); font-style:italic; min-height:18px; }
+  .eq-bars{ display:inline-flex; gap:2px; align-items:flex-end; height:14px; margin-left:6px; }
+  .eq-bars i{ width:3px; background:var(--gold-soft); border-radius:2px; animation:eq 0.6s ease-in-out infinite; }
+  .eq-bars i:nth-child(2){ animation-delay:0.15s; } .eq-bars i:nth-child(3){ animation-delay:0.3s; }
+  @keyframes eq{ 0%,100%{ height:4px;} 50%{ height:14px;} }
+
+  /* RECAP / CERTIFICATE */
+  .recap-stat-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:12px 0; }
+  .stat-box{ padding:14px; border-radius:var(--radius-md); background:rgba(244,240,227,0.05); border:1px solid var(--line); text-align:center; }
+  .stat-box .sv{ font-family:'Fraunces',serif; font-size:24px; color:var(--gold-soft); font-weight:700; }
+  .stat-box .sl{ font-size:11.5px; color:var(--cream-dim); margin-top:2px; }
+
+  .cert{
+    border-radius:var(--radius-lg); padding:28px 22px; text-align:center; position:relative; overflow:hidden;
+    background:linear-gradient(165deg, #f3e9d2, #e8dab8);
+    border:1.5px solid rgba(139,109,58,0.55);
+    box-shadow:0 14px 30px rgba(5,4,20,0.45);
+  }
+  .cert::before{
+    content:''; position:absolute; inset:8px; border:1px solid rgba(139,109,58,0.4); border-radius:14px; pointer-events:none;
+  }
+  .cert .cstar{ font-size:30px; filter:drop-shadow(0 1px 0 rgba(255,255,255,0.4)); }
+  .cert h2{ font-family:'Fraunces',serif; color:#5a3d1a; font-size:21px; margin:6px 0 2px; }
+  .cert .cname{ font-size:19px; font-weight:800; margin:8px 0; color:#3a2a14; font-family:'Fraunces',serif; }
+  .cert .cline{ font-size:13px; color:#5a4a30; line-height:1.6; }
+  .cert .cplants{ font-size:13px; margin-top:10px; color:#3f6b4a; font-weight:700; }
+
+  .parchment-card{
+    border-radius:var(--radius-lg); padding:16px; background:linear-gradient(165deg, #f3e9d2, #ece0c3);
+    border:1px solid rgba(139,109,58,0.45); box-shadow:0 10px 22px rgba(5,4,20,0.35); margin-bottom:14px;
+  }
+  .parchment-card h2, .parchment-card .sub, .parchment-card b{ color:#3a2a14 !important; }
+  .parchment-card .sub{ color:#5a4a30 !important; }
+
+  .locked-msg{ text-align:center; padding:30px 16px; color:var(--cream-dim); font-size:14px; }
+  .locked-msg .lk{ font-size:34px; display:block; margin-bottom:10px; }
+
+  ::-webkit-scrollbar{ display:none; }
+
+  @media (max-width:360px){
+    .mode-card .lbl{ font-size:11px; }
+    .stamp-slot .sn{ display:none; }
+  }
+  /* accessibility: visible keyboard focus */
+  button:focus-visible, input:focus-visible, textarea:focus-visible, .mode-card:focus-visible, .interest-chip:focus-visible, .booth-row:focus-visible {
+    outline: 2px solid var(--gold-soft); outline-offset: 2px;
+  }
+
+  /* respect reduced motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Phone-sized canvas, including fixed overlays. */
+  :root { --phone-width:390px; padding-top:0; padding-bottom:0; }
+  html { -webkit-text-size-adjust:100%; }
+  #app { width:100%; max-width:var(--phone-width); min-height:100dvh; }
+  .stars { left:50%; right:auto; width:min(100%, var(--phone-width)); transform:translateX(-50%); }
+  .bottomnav { left:50%; right:auto; width:min(100%, var(--phone-width)); transform:translateX(-50%); }
+  .buddy-panel { width:calc(min(100%, var(--phone-width)) - 28px); max-width:none; }
+  .buddy-bubble { right:max(16px, calc((100vw - var(--phone-width)) / 2 + 16px)); }
+  main { min-width:0; padding-bottom:calc(112px + env(safe-area-inset-bottom,0px)); }
+  .topbar { flex-wrap:wrap; }
+  .brand { min-width:0; }
+  .brand-text { font-size:15px; }
+  .pill-btn { min-height:36px; padding:6px 8px; }
+  .name-field { font-size:16px; }
+  .section-title { gap:8px; flex-wrap:wrap; }
+  .section-title h2 { overflow-wrap:anywhere; }
+  .map-wrap { height:auto; min-height:0; max-height:none; aspect-ratio:400 / 560; touch-action:pan-y; }
+  .map-wrap.zoomed { touch-action:none; }
+  .zbtn { width:40px; height:40px; }
+  .navbtn { min-width:0; min-height:48px; }
+  .route-row { flex-wrap:wrap; }
+  .route-row .rname { min-width:100px; }
+  .route-row .rbtn { width:36px; height:36px; }
+  .speech > div:last-child, .eco-meter > div:last-child { min-width:0; overflow-wrap:anywhere; }
+  .badge-row { flex-wrap:wrap; }
+  .plushie-card .btn { width:100%; padding-left:8px; padding-right:8px; white-space:normal; }
+  .interest-grid, .food-grid, .plushie-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  img { max-width:100%; }
+  @media (min-width:430px) {
+    #app { border-left:1px solid var(--line); border-right:1px solid var(--line); box-shadow:0 0 60px rgba(5,4,20,.4); }
+  }
+  @media (max-width:360px) {
+    main { padding-left:12px; padding-right:12px; }
+    .card { padding:14px; }
+    .topbar { padding-left:12px; padding-right:12px; }
+    .mode-grid { gap:6px; }
+    .bottomnav { padding-left:6px; padding-right:6px; }
+    .navbtn .lbl { font-size:9px; }
+  }
+
+</style>
+<meta name="description" content="Join Fernan and Oakley on a Celestial Ranger adventure: explore five booths, collect stamps, and find your constellation.">
+<meta name="theme-color" content="#0a0e2a"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Celestial Ranger"><link rel="stylesheet" href="upgrade.css"></head>
+<body>
+<div class="stars"></div>
+<div id="app">
+
+  <header class="topbar" id="topbar" style="display:none;">
+    <div class="brand">
+      <span class="brand-mark">🌌</span>
+      <span class="brand-text">Celestial Rangers</span>
+    </div>
+    <div class="toggles">
+      <div class="pill-toggle" id="modeCycle">
+        <button class="pill-btn active" id="modeCycleBtn" title="Tap to switch Ranger mode">🧒 Kid</button>
+      </div>
+      <div class="pill-toggle" id="dayNightToggle">
+        <button class="pill-btn" data-dn="day">☀️</button>
+        <button class="pill-btn" data-dn="night">🌙</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ========== ONBOARDING ========== -->
+    <section class="screen visible" id="screen-onboard">
+      <div class="onboard-hero">
+        <span class="glyph">✨</span>
+        <h1>The Celestial Ranger Program</h1>
+      </div>
+
+      <div class="card" id="resumeCard" style="display:none;">
+        <h2 style="font-size:16px;">Welcome back, Ranger</h2>
+        <p class="sub" style="margin-top:4px;">Your last adventure is still saved on this device.</p>
+        <button class="btn btn-primary btn-block" id="resumeBtn" style="margin-top:10px;">Continue your adventure</button>
+        <button class="btn btn-ghost btn-block" id="freshStartBtn" style="margin-top:8px;">Start a brand new adventure</button>
+      </div>
+
+      <div class="card" id="cinematicIntroCard">
+        <div class="speech" style="margin-bottom:0;">
+          <div class="av character-art fernan" aria-label="Fernan"></div>
+          <div>
+            <div class="who">Fernan</div>
+            <div class="txt">Psst! Over here! I usually get myself into trouble and Oakley helps me out of it. Today the portal glitched, and now she is the one lost somewhere out in the galaxy.</div>
+          </div>
+        </div>
+        <div class="speech">
+          <div class="av character-art oakley" aria-label="Oakley"></div>
+          <div>
+            <div class="who">Oakley, recorded transmission</div>
+            <div class="txt">Do not worry. I am safe. I managed to send this message before the signal faded. I left clues at five places I know well. Find them, and you will find your way to me.</div>
+          </div>
+        </div>
+        <p class="sub">Fernan would love some company finding his best friend. Will you help? You get to be a real Celestial Ranger.</p>
+      </div>
+
+      <div class="card eyebrow-free">
+        <h2>Your mission</h2>
+        <p class="sub" style="margin-top:8px;">To scan the stars, safeguard the cosmos, and ensure no explorer is ever left behind. As Celestial Rangers at Epic Universe, our highest duty is to locate, guide, and protect lost star travelers, reuniting them with their home constellations using the power of galactic teamwork.</p>
+
+        <div class="oath-box">
+          <h3>🌠 The Ranger Oath</h3>
+          <p>"I promise to keep my eyes on the skies, my mind on the map, and my heart open to every traveler in the cosmos. Where there is darkness, I am the light. Celestial Rangers lead the way!"</p>
+        </div>
+
+        <label class="oath-check">
+          <input type="checkbox" id="oathCheckbox">
+          <span>I take the Ranger Oath and I'm ready to explore.</span>
+        </label>
+
+        <input class="name-field" id="rangerName" type="text" placeholder="What's your Ranger name?" maxlength="24">
+      </div>
+
+      <div class="card">
+        <h2 style="font-size:17px;">Choose your Ranger mode</h2>
+        <p class="sub" style="margin-top:4px;">You can switch anytime from the map screen.</p>
+        <div class="mode-grid" id="modeGrid">
+          <div class="mode-card" data-mode="kid" tabindex="0" role="button" aria-label="Kid Mode"><span class="ic">🧒</span><span class="lbl">Kid Mode</span></div>
+          <div class="mode-card" data-mode="parent" tabindex="0" role="button" aria-label="Parent Mode"><span class="ic">🧭</span><span class="lbl">Parent Mode</span></div>
+          <div class="mode-card" data-mode="college" tabindex="0" role="button" aria-label="Efficient Mode"><span class="ic">⚡</span><span class="lbl">Efficient Mode</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 style="font-size:17px;">What are you most curious about?</h2>
+        <p class="sub" style="margin-top:4px;">Pick any that excite you, we'll surface those booths first and build them into your route. Totally optional, and you can change this anytime on the map.</p>
+        <div class="interest-grid" id="interestGrid"></div>
+        <button class="btn btn-primary btn-block" id="beginBtn" disabled style="margin-top:14px;">Begin the Search</button>
+      </div>
+
+      <p class="disclaimer">⚠️ Unofficial fan-made concept prototype. Not affiliated with, sponsored by, or endorsed by Universal Destinations &amp; Experiences, Nintendo, Warner Bros., or DreamWorks Animation. The park map shown is an original stylized illustration, not official park artwork. Franchise names are used only as fictional placeholder references for this design concept.</p>
+    </section>
+
+    <!-- ========== MAP / HOME ========== -->
+    <section class="screen" id="screen-map">
+
+      <!-- Smart tips: college-first placement -->
+      <div id="collegeTipsTop"></div>
+
+      <div class="section-title">
+        <h2 id="mapGreeting">Welcome, Ranger</h2>
+        <span class="meta" id="stampCountMeta">0 / 5 stamps</span>
+      </div>
+
+      <div class="card flush">
+        <div class="map-zoom-controls">
+          <button class="zbtn" id="zoomInBtn" aria-label="Zoom in">+</button>
+          <button class="zbtn" id="zoomOutBtn" aria-label="Zoom out">−</button>
+          <button class="zbtn" id="zoomResetBtn" aria-label="Reset view">⟲</button>
+        </div>
+        <div class="map-wrap" id="mapWrap">
+          <div class="map-pan" id="mapPan">
+          <svg viewBox="0 0 400 560" id="parkMap" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="mapBg" cx="50%" cy="35%" r="75%">
+                <stop offset="0%" stop-color="#2d2260"/>
+                <stop offset="100%" stop-color="#110c2c"/>
+              </radialGradient>
+              <filter id="landBlur" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="16"/>
+              </filter>
+              <radialGradient id="hubGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#e8b256" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="#e8b256" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+            <rect x="0" y="0" width="400" height="560" fill="url(#mapBg)"/>
+
+            <!-- subtle constellation motif (Big Dipper, nodding to "finding the way home"), tucked in the top-left corner -->
+            <g opacity="0.45" stroke="#f4f0e3" stroke-width="1">
+              <path d="M30 20 L48 28 L68 22 L86 32 L104 26 L100 42 L116 48" fill="none" stroke-dasharray="1 0"/>
+              <g fill="#f4f0e3">
+                <circle cx="30" cy="20" r="1.6"/><circle cx="48" cy="28" r="1.3"/><circle cx="68" cy="22" r="1.6"/>
+                <circle cx="86" cy="32" r="1.3"/><circle cx="104" cy="26" r="1.6"/><circle cx="100" cy="42" r="1.3"/>
+                <circle cx="116" cy="48" r="1.6"/>
+              </g>
+            </g>
+
+            <!-- Universal Helios Grand Hotel, a background landmark only (north of the hub, matching the real map) -->
+            <g transform="translate(290,30)" opacity="0.6">
+              <rect x="-10" y="-14" width="10" height="28" fill="#4a4660"/>
+              <rect x="2" y="-20" width="10" height="34" fill="#4a4660"/>
+              <text y="22" text-anchor="middle" font-size="7.5" fill="#cfc9ea" font-family="Nunito">Hotel (landmark)</text>
+            </g>
+
+            <!-- land zones (original stylized regions, tinted per land, sized and placed to echo the real map's asymmetry -->
+            <g id="landZones" filter="url(#landBlur)">
+              <ellipse cx="90" cy="170" rx="90" ry="90" fill="#5b3b8c" fill-opacity="0.30"/>
+              <ellipse cx="255" cy="95" rx="95" ry="75" fill="#35407a" fill-opacity="0.30"/>
+              <ellipse cx="70" cy="410" rx="95" ry="92" fill="#2f8f7a" fill-opacity="0.26"/>
+              <ellipse cx="330" cy="300" rx="100" ry="115" fill="#c9763d" fill-opacity="0.24"/>
+              <circle cx="200" cy="280" r="110" fill="url(#hubGlow)"/>
+            </g>
+
+            <!-- static walkways between the hub and each land (original layout, simulated) -->
+            <g stroke="rgba(244,240,227,0.22)" stroke-width="5" stroke-linecap="round" fill="none">
+              <path d="M200,280 Q145,230 90,170"/>
+              <path d="M200,280 Q230,185 255,95"/>
+              <path d="M200,280 Q130,350 70,410"/>
+              <path d="M200,280 Q270,290 330,300"/>
+              <path d="M200,280 Q200,400 200,480"/>
+            </g>
+
+            <!-- land name chips -->
+            <g font-family="Nunito" font-weight="700" font-size="9.5" fill="#f4f0e3" text-anchor="middle" opacity="0.8">
+              <text x="90" y="108">DARK UNIVERSE</text>
+              <text x="255" y="38">WIZARDING WORLD</text>
+              <text x="70" y="346">SUPER NINTENDO WORLD</text>
+              <text x="330" y="212">ISLE OF BERK</text>
+            </g>
+
+            <!-- generic decorative attraction markers, original shapes only, to give each land some texture like a real park map -->
+            <g opacity="0.55" font-size="9">
+              <circle cx="55" cy="150" r="6" fill="#8f6fd1"/><text x="55" y="153" text-anchor="middle">🌙</text>
+              <circle cx="120" cy="200" r="6" fill="#8f6fd1"/><text x="120" y="203" text-anchor="middle">🕯️</text>
+              <circle cx="225" cy="65" r="6" fill="#cfc9ea"/><text x="225" y="68" text-anchor="middle">🏰</text>
+              <circle cx="290" cy="110" r="6" fill="#cfc9ea"/><text x="290" y="113" text-anchor="middle">🪄</text>
+              <circle cx="35" cy="380" r="6" fill="#3fa6a0"/><text x="35" y="383" text-anchor="middle">🍄</text>
+              <circle cx="100" cy="450" r="6" fill="#3fa6a0"/><text x="100" y="453" text-anchor="middle">🏁</text>
+              <circle cx="300" cy="260" r="6" fill="#d9793d"/><text x="300" y="263" text-anchor="middle">🛡️</text>
+              <circle cx="365" cy="330" r="6" fill="#d9793d"/><text x="365" y="333" text-anchor="middle">🔥</text>
+              <circle cx="225" cy="255" r="6" fill="#e8b256"/><text x="225" y="258" text-anchor="middle">🎡</text>
+            </g>
+
+            <path id="plannedPath" d="" stroke="#8fd1ff" stroke-width="2" stroke-dasharray="3 5" fill="none" opacity="0.6"/>
+            <path id="tripPath" d="" stroke="#e8b256" stroke-width="2.5" stroke-dasharray="6 7" fill="none" opacity="0.9"/>
+
+            <!-- simple compass rose (standard cartographic convention, original rendering), bottom-left away from the busier top -->
+            <g transform="translate(34,520)" opacity="0.8">
+              <circle r="17" fill="rgba(10,9,30,0.4)" stroke="rgba(244,240,227,0.3)"/>
+              <path d="M0,-13 L4,0 L0,13 L-4,0 Z" fill="#e8b256"/>
+              <path d="M-13,0 L0,-4 L13,0 L0,4 Z" fill="#cfc9ea" opacity="0.6"/>
+              <text y="-19" text-anchor="middle" font-size="7" fill="#f4f0e3" font-family="Nunito">N</text>
+            </g>
+
+            <!-- entrance (south of the central hub, matching the real park's layout) -->
+            <g transform="translate(200,500)">
+              <circle r="15" fill="#352a63" stroke="#f4f0e3" stroke-opacity="0.35"/>
+              <text y="4" text-anchor="middle" font-size="12">🚪</text>
+              <text y="-22" text-anchor="middle" font-size="11" fill="#cfc9ea" font-family="Nunito" font-weight="700">Park Entrance</text>
+            </g>
+            <g id="boothMarkers"></g>
+            <g id="currentLocDot"></g>
+          </svg>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="legend">
+        <span><i style="background:#e8b256"></i> Visited booth</span>
+        <span><i style="background:#8f84c9"></i> Unvisited booth</span>
+        <span><i style="background:#3fa66b"></i> Shade + refreshments</span>
+        <span><i style="background:#8fd1ff"></i> Your planned route</span>
+      </div>
+      <p class="sim-note">📍 Location, distances, waits, and directions in this prototype are <b>simulated</b> for demonstration, not live GPS, ride, or weather data.</p>
+
+      <div class="section-title" style="margin-top:18px;">
+        <h2>Portal booths</h2>
+        <div style="display:flex; gap:6px;">
+          <button class="btn btn-ghost btn-sm" id="editInterestsBtn">✨ Interests</button>
+          <button class="btn btn-ghost btn-sm" id="editRouteBtn">🗺️ Plan route</button>
+        </div>
+      </div>
+      <div class="interests-edit-panel" id="interestsEditPanel">
+        <div class="card">
+          <h2 style="font-size:15px;">What are you most curious about?</h2>
+          <p class="sub" style="margin-top:4px;">Toggle your picks, the list and buddy recommendations update right away.</p>
+          <div class="interest-grid" id="interestGridMap"></div>
+        </div>
+      </div>
+      <div class="interests-edit-panel" id="routeEditPanel">
+        <div class="card">
+          <h2 style="font-size:15px;">Plan your route</h2>
+          <p class="sub" style="margin-top:4px;">Pick the booths you want to visit and set the order with the arrows. The light blue dashed line on the map and your buddy's suggestions will follow this plan. This is your plan, not a verified walking route.</p>
+          <div id="routePlanList" style="margin-top:10px;"></div>
+          <button class="btn btn-ghost btn-sm" id="clearRouteBtn" style="margin-top:10px;">Clear my plan</button>
+        </div>
+      </div>
+      <div id="boothList"></div>
+
+      <div id="carouselRow"></div>
+
+      <div class="section-title" style="margin-top:22px;">
+        <h2>Everything at Epic Universe</h2>
+        <button class="btn btn-ghost btn-sm" id="toggleDirectoryBtn">📖 Full directory</button>
+      </div>
+      <p class="sim-note" id="directoryIntro" style="display:none;">These are the real, publicly-listed rides, dining spots, and meet &amp; greets at each land, included here for reference. Names only; this isn't live hours, wait times, or availability.</p>
+
+      <div id="parkDirectory" style="display:none;">
+        <details class="dir-land">
+          <summary>🌌 Celestial Park</summary>
+          <div class="dir-group"><div class="dir-label">🎢 Rides</div><ul>
+            <li>Stardust Racers</li><li>Constellation Carousel</li><li>Astronomica</li>
+          </ul></div>
+          <div class="dir-group"><div class="dir-label">🍽️ Dining</div><ul>
+            <li>Atlantic <span class="dir-price">$$</span></li>
+            <li>The Blue Dragon Pan-Asian Restaurant <span class="dir-price">$$</span></li>
+            <li>The Oak &amp; Star Tavern <span class="dir-price">$$</span></li>
+            <li>The Plastered Owl <span class="dir-price">$$</span></li>
+            <li>Pizza Moon <span class="dir-price">$$</span></li>
+            <li>Meteor Astropub <span class="dir-price">$$</span></li>
+            <li>Bar Zenith <span class="dir-price">$$</span></li>
+            <li>Star Sui Bao <span class="dir-price">$$</span></li>
+            <li>Frosty Moon <span class="dir-price">$</span></li>
+            <li>Comet Dogs</li>
+            <li>CelesTiki <span class="dir-price">$$</span></li>
+            <li>Celestial Snacks <span class="dir-price">$</span></li>
+            <li>Celestial Popcorn <span class="dir-price">$</span></li>
+            <li>Starbucks®</li>
+          </ul></div>
+        </details>
+
+        <details class="dir-land">
+          <summary>🍄 Super Nintendo World</summary>
+          <div class="dir-group"><div class="dir-label">🎢 Rides</div><ul>
+            <li>Mario Kart: Bowser's Challenge</li><li>Mine-Cart Madness</li><li>Yoshi's Adventure</li>
+          </ul></div>
+          <div class="dir-group"><div class="dir-label">🤝 Meet &amp; Greets</div><ul>
+            <li>Mario &amp; Luigi</li><li>Princess Peach</li><li>Toad</li><li>Donkey Kong</li>
+          </ul></div>
+          <div class="dir-group"><div class="dir-label">🍽️ Dining</div><ul>
+            <li>Toadstool Cafe <span class="dir-price">$$</span></li>
+            <li>The Bubbly Barrel <span class="dir-price">$$</span></li>
+            <li>Yoshi's Snack Island <span class="dir-price">$</span></li>
+            <li>Turbo Boost Treats <span class="dir-price">$</span></li>
+          </ul></div>
+        </details>
+
+        <details class="dir-land">
+          <summary>🧟 Dark Universe</summary>
+          <div class="dir-group"><div class="dir-label">🎢 Rides</div><ul>
+            <li>Monsters Unchained: The Frankenstein Experiment</li><li>Curse of the Werewolf</li>
+          </ul></div>
+          <div class="dir-group"><div class="dir-label">🤝 Experiences</div><ul>
+            <li>Dark Universe Character Meet &amp; Greet</li><li>Darkmoor Monster Makeup Experience</li>
+          </ul></div>
+          <div class="dir-group"><div class="dir-label">🍽️ Dining</div><ul>
+            <li>Das Stakehaus <span class="dir-price">$$</span></li>
+            <li>The Burning Blade Tavern <span class="dir-price">$</span></li>
+            <li>De Lacey's Cottage <span class="dir-price">$</span></li>
+          </ul></div>
+        </details>
+
+        <details class="dir-land">
+          <summary>🪄 Wizarding World of Harry Potter</summary>
+          <div class="dir-group"><div class="dir-label">🎢 Rides &amp; Experiences</div><ul>
+            <li>Harry Potter and the Battle at the Ministry</li><li>Le Cirque Arcanus</li><li>Cosme Acajor Baguettes Magique</li>
+          </ul></div>
+          <div class="dir-group"><div class="dir-label">🍽️ Dining</div><ul>
+            <li>Café L'air De La Sirène <span class="dir-price">$$</span></li>
+            <li>Le Gobelet Noir <span class="dir-price">$$</span></li>
+            <li>Bar Moonshine <span class="dir-price">$$</span></li>
+            <li>Bièraubeurre Cart <span class="dir-price">$</span></li>
+          </ul></div>
+        </details>
+
+        <details class="dir-land">
+          <summary>🐉 How to Train Your Dragon – Isle of Berk</summary>
+          <div class="dir-group"><div class="dir-label">🎢 Rides</div><ul>
+            <li>Hiccup's Wing Gliders</li><li>Dragon Racer's Rally</li><li>Fyre Drill</li><li>The Untrainable Dragon</li><li>Viking Training Camp</li>
+          </ul></div>
+          <div class="dir-group"><div class="dir-label">🤝 Meet &amp; Greets</div><ul>
+            <li>Meet Toothless and Friends</li>
+          </ul></div>
+          <div class="dir-group"><div class="dir-label">🍽️ Dining</div><ul>
+            <li>Mead Hall <span class="dir-price">$$</span></li>
+            <li>Spit Fyre Grill <span class="dir-price">$$</span></li>
+            <li>Hooligan's Grog and Gruel <span class="dir-price">$</span></li>
+          </ul></div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ========== BOOTH DETAIL ========== -->
+    <section class="screen" id="screen-booth">
+      <button class="backlink" id="boothBack">← Back to map</button>
+      <div class="card flush">
+        <div class="booth-hero" id="boothHero">
+          <div class="portal-tag" id="boothPortalTag">PORTAL</div>
+          <div class="plant-photo-wrap" id="boothPhotoWrap" style="display:none;">
+            <img class="plant-photo" id="boothPhoto" src="" alt="">
+            <div class="plant-emoji-badge" id="boothEmojiBadge">🌿</div>
+          </div>
+          <span class="plant-emoji" id="boothEmoji" style="display:none;">🌿</span>
+          <h2 id="boothPlantName">Plant name</h2>
+        </div>
+      </div>
+      <p class="photo-caption" id="boothPhotoCaption" style="display:none;">📷 Photographed on-site by the Ranger team</p>
+      <div class="card flush">
+        <div id="boothArtWrap" style="line-height:0;"></div>
+        <p class="sub" style="padding:10px 14px 4px; font-size:11px;">Concept illustration. This booth is a proposed addition and is not an existing park facility.</p>
+      </div>
+      <div class="card">
+        <div class="section-title" style="margin:0 0 6px;"><h2 style="font-size:14px;" id="boothHostName">Host</h2></div>
+        <p class="sub" id="boothArrival" style="font-style:italic;"></p>
+      </div>
+      <div class="card flush" style="margin-top:0;">
+        <div style="padding:16px;">
+          <p class="sub" id="boothFunFact"></p>
+        </div>
+      </div>
+
+      <button class="btn btn-ghost btn-sm" id="editBoothBtn">✏️ Edit this booth</button>
+      <div class="card" id="boothEditPanel" style="display:none;">
+        <h2 style="font-size:15px;">Edit booth content</h2>
+        <p class="sub" style="margin-top:4px;">Swap in a different plant or rewrite the dialogue. Changes apply immediately for this session.</p>
+        <label class="edit-label">Plant name</label>
+        <input class="name-field" id="editPlantName">
+        <label class="edit-label">Emoji</label>
+        <input class="name-field" id="editEmoji" maxlength="4" style="max-width:90px;">
+        <label class="edit-label">Fun fact</label>
+        <textarea class="name-field" id="editFunFact" rows="3"></textarea>
+        <label class="edit-label">Oakley's line (parent voice)</label>
+        <textarea class="name-field" id="editOakleyText" rows="2"></textarea>
+        <label class="edit-label">Fernan's line (kid voice)</label>
+        <textarea class="name-field" id="editFernanText" rows="2"></textarea>
+        <label class="edit-label">Oakley's clue</label>
+        <textarea class="name-field" id="editClue" rows="2"></textarea>
+        <div style="display:flex; gap:10px; margin-top:12px;">
+          <button class="btn btn-ghost btn-block" id="cancelBoothEditBtn">Cancel</button>
+          <button class="btn btn-green btn-block" id="saveBoothEditBtn">Save changes</button>
+        </div>
+      </div>
+
+      <div class="speech" id="boothDialogue">
+        <div class="av" id="boothAv">🌿</div>
+        <div>
+          <div class="who" id="boothWho">Oakley</div>
+          <div class="txt" id="boothSpeechText"></div>
+        </div>
+      </div>
+
+      <div class="clue-box">
+        <div class="ct">🔭 Oakley's clue</div>
+        <p id="boothClueText"></p>
+      </div>
+
+      <div class="card">
+        <h2 style="font-size:16px;">Discovery challenge</h2>
+        <p class="sub" id="triviaQuestion" style="margin-top:4px;"></p>
+        <div class="trivia-opts" id="triviaOpts"></div>
+        <button class="btn btn-ghost btn-sm" id="challengeHintBtn" style="margin-top:10px;">Need a hint</button>
+        <p class="sub" id="challengeHintText" style="margin-top:6px; font-style:italic; display:none;"></p>
+        <div class="trivia-feedback" id="triviaFeedback" style="display:none;"></div>
+      </div>
+
+      <button class="btn btn-green btn-block" id="stampBtn">🪐 Collect Stamp</button>
+    </section>
+
+    <!-- ========== PASSPORT ========== -->
+    <section class="screen" id="screen-passport">
+      <div class="section-title"><h2>Ranger Passport</h2><span class="meta" id="passportMeta">0 / 5</span></div>
+      <div class="card">
+        <div class="stamp-grid" id="stampGrid"></div>
+      </div>
+      <div class="parchment-card">
+        <h2 style="font-size:16px;">Discovery challenges</h2>
+        <p class="sub" style="margin-top:4px;">You have solved <b id="triviaCorrectCount" style="color:#3f6b4a;">0</b> discovery challenge(s), recorded in your field journal below.</p>
+      </div>
+      <div id="keepsakeList"></div>
+    </section>
+
+    <!-- ========== FOOD ========== -->
+    <section class="screen" id="screen-food">
+      <div class="section-title"><h2>Snack Station</h2></div>
+      <p class="sim-note">🍽️ These are real, publicly-listed dining spots at Epic Universe, referenced by name for flavor and wayfinding. Ordering, pickup, and $ / $$ price tiers here are simulated, not a live menu or mobile-ordering connection.</p>
+
+      <div id="kidFoodBlock" class="card">
+        <h2 style="font-size:16px;">🧒 Pick a pretend snack</h2>
+        <p class="sub" style="margin-top:4px;">Pick one treat and show a grown-up.</p>
+        <div class="food-grid" id="foodGrid" style="margin-top:12px;"></div>
+      </div>
+
+      <div class="card" id="parentFoodBlock">
+        <h2 style="font-size:16px;">🧭 Pickup details</h2>
+        <p class="sub" style="margin-top:4px;">Your pretend snack selection. No purchase or pickup is created.</p>
+        <div id="orderStatusWrap" style="margin-top:10px;"></div>
+      </div>
+    </section>
+
+    <!-- ========== ECO RANGER ========== -->
+    <section class="screen" id="screen-eco">
+      <div class="section-title"><h2>Eco Ranger</h2></div>
+      <div class="card">
+        <div class="eco-meter">
+          <div class="eco-ring" id="ecoRing" style="--pct:0;"><span id="ecoPoints">0</span></div>
+          <div>
+            <div class="badge-row"><span>🏅</span><span id="ecoBadgeName">Seedling Ranger</span></div>
+            <div class="badge-pill" id="ecoBadgeTier" style="margin-top:6px; display:inline-block;">Bronze tier</div>
+          </div>
+        </div>
+        <p class="sub">Earn points by taking the oath, collecting stamps, and solving discovery challenges.</p>
+      </div>
+      <div class="card">
+        <h2 style="font-size:16px;">Did you know?</h2>
+        <div class="fact-card"><span class="fi">🌱</span><p id="ecoFactText">Loading fact…</p></div>
+        <button class="btn btn-ghost btn-sm" id="nextFactBtn" style="margin-top:10px;">Next fact →</button>
+      </div>
+    </section>
+
+    <!-- ========== PLUSHIE ========== -->
+    <section class="screen" id="screen-plushie">
+      <div class="section-title"><h2>Shoulder Plushie Activations</h2></div>
+      <div class="card flush">
+        <svg viewBox="0 0 300 180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Scale illustration of a shoulder plushie clipped to a backpack strap" style="display:block;">
+          <rect width="300" height="180" fill="#171135"/>
+          <path d="M90,170 Q90,90 150,80 Q210,90 210,170 Z" fill="#2a2255"/>
+          <circle cx="150" cy="55" r="26" fill="#3a2f66"/>
+          <rect x="140" y="78" width="10" height="30" fill="#4a3d82"/>
+          <g transform="translate(176,78)">
+            <circle r="17" fill="#8fd1ab" stroke="#3f8f5f" stroke-width="2"/>
+            <path d="M-9,-20 C-14,-28 -24,-26 -26,-18 C-18,-16 -12,-18 -9,-20 Z" fill="#3f8f5f"/>
+            <path d="M9,-20 C14,-28 24,-26 26,-18 C18,-16 12,-18 9,-20 Z" fill="#3f8f5f"/>
+            <circle cx="-5" cy="-2" r="2" fill="#1a1440"/><circle cx="5" cy="-2" r="2" fill="#1a1440"/>
+            <path d="M-6,6 Q0,10 6,6" stroke="#1a1440" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <rect x="-3" y="14" width="6" height="8" rx="2" fill="#2a2255"/>
+          </g>
+          <text x="176" y="40" text-anchor="middle" font-size="9" fill="#cfc9ea">about 4 inches tall</text>
+          <text x="150" y="25" text-anchor="middle" font-size="9" fill="#cfc9ea">clips onto a backpack strap or collar</text>
+        </svg>
+        <p class="sub" style="padding:10px 14px;">Concept scale and attachment only. The complete adventure is available to every guest whether or not a plushie is purchased.</p>
+      </div>
+      <p class="sub" style="margin-bottom:12px;">Press a badge to hear what your shoulder buddy has to say. (Prototype: sound is mocked with on-screen captions.)</p>
+      <div class="plushie-grid">
+        <div class="plushie-card">
+          <span class="pe" id="oakleyPlushieIcon"><img class="plush-art" src="assets/oakley.png" alt="Oakley, the flower character"></span>
+          <h3>Oakley</h3>
+          <button class="btn btn-ghost btn-sm btn-block" id="oakleyPlushieBtn">▶ Press badge</button>
+          <div class="audio-caption" id="oakleyCaption"></div>
+        </div>
+        <div class="plushie-card">
+          <span class="pe" id="fernanPlushieIcon"><img class="plush-art" src="assets/fernan.png" alt="Fernan"></span>
+          <h3>Fernan</h3>
+          <button class="btn btn-ghost btn-sm btn-block" id="fernanPlushieBtn">▶ Press badge</button>
+          <div class="audio-caption" id="fernanCaption"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== RECAP ========== -->
+    <section class="screen" id="screen-recap">
+      <div class="section-title"><h2>End-of-Day Recap</h2></div>
+      <div id="recapLocked" class="card locked-msg">
+        <span class="lk">🔒</span>
+        Visit all 5 booths and reach the Carousel to unlock your recap and Ranger Certificate.
+      </div>
+      <div id="recapContent" style="display:none;">
+
+        <div class="card" id="constellationCard">
+          <h2 style="font-size:16px; text-align:center;">The clues come together</h2>
+          <div class="map-wrap" style="margin-top:10px; height:180px;">
+            <svg viewBox="0 0 400 180" id="constellationSvg" xmlns="http://www.w3.org/2000/svg">
+              <rect width="400" height="180" fill="#0c0a28"/>
+              <g id="constellationStars" stroke="#e8b256" stroke-width="1.5" fill="#f4f0e3"></g>
+            </svg>
+          </div>
+          <p class="sub" style="text-align:center; margin-top:8px;">Five botanical clues, traced together, point to one place. The Constellation Carousel.</p>
+        </div>
+
+        <div class="card">
+          <div class="speech" style="margin-bottom:0;">
+            <div class="av character-art fernan" aria-label="Fernan"></div>
+            <div>
+              <div class="who">Fernan</div>
+              <div class="txt" id="reunionFernanText">Oakley! You are really here! I knew the Rangers would find you, I just... I am really glad you are home.</div>
+            </div>
+          </div>
+          <div class="speech">
+            <div class="av character-art oakley" aria-label="Oakley"></div>
+            <div>
+              <div class="who">Oakley</div>
+              <div class="txt" id="reunionOakleyText">Thank you, Ranger. Your careful observations and your teamwork brought me home faster than I ever expected. Everyone needs help finding their way sometimes, and today you were that help.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="recap-stat-grid">
+          <div class="stat-box"><div class="sv">5/5</div><div class="sl">Booths visited</div></div>
+          <div class="stat-box"><div class="sv" id="recapTriviaScore">0/5</div><div class="sl">Discoveries solved</div></div>
+          <div class="stat-box"><div class="sv" id="recapRank">Seedling Ranger</div><div class="sl">Ranger rank</div></div>
+          <div class="stat-box"><div class="sv" id="recapPlants">5</div><div class="sl">Plants learned</div></div>
+        </div>
+
+        <div class="card">
+          <h2 style="font-size:16px;">Your path today</h2>
+          <div class="map-wrap" style="margin-top:10px;">
+            <svg viewBox="0 0 400 200" id="recapMap" xmlns="http://www.w3.org/2000/svg">
+              <rect width="400" height="200" fill="#1a1440"/>
+              <path id="recapPath" d="" stroke="#e8b256" stroke-width="2.5" stroke-dasharray="5 6" fill="none"/>
+              <g id="recapMarkers"></g>
+            </svg>
+          </div>
+        </div>
+
+        <div class="cert">
+          <span class="cstar">⭐</span>
+          <h2>Certificate of Galactic Service</h2>
+          <div class="cname" id="certName">Ranger</div>
+          <p class="cline">has completed the Celestial Ranger Program, helped reunite Oakley with her best friend, and is hereby welcomed as a lasting friend of Oakley and Fernan.</p>
+          <div class="cplants" id="certPlantList"></div>
+        </div>
+        <button class="btn btn-primary btn-block" style="margin-top:14px;" id="shareCertBtn">Share my certificate</button>
+        <p class="disclaimer">Unofficial fan concept. Not an official Universal Epic Universe product.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="bottomnav" id="bottomNav">
+    <div class="bottomnav-inner">
+      <button class="navbtn" data-screen="map"><span class="ic">🗺️</span><span class="lbl">Map</span></button>
+      <button class="navbtn" data-screen="passport"><span class="ic">📘</span><span class="lbl">Passport</span></button>
+      <button class="navbtn" data-screen="food"><span class="ic">🍉</span><span class="lbl">Snacks</span></button>
+      <button class="navbtn" data-screen="eco"><span class="ic">🌍</span><span class="lbl">Eco</span></button>
+      <button class="navbtn" data-screen="plushie"><span class="ic">🧸</span><span class="lbl">Plushie</span></button>
+      <button class="navbtn" data-screen="recap"><span class="ic">🎠</span><span class="lbl">Recap</span></button>
+    </div>
+  </nav>
+
+  <!-- ========== FLOATING BUDDY COMPANION ========== -->
+  <div class="buddy-panel" id="buddyPanel" style="display:none;">
+    <div class="buddy-row">
+      <div class="buddy-av" id="buddyAv">🍃</div>
+      <div class="buddy-body">
+        <div class="buddy-who" id="buddyWho">Fernan</div>
+        <div class="buddy-text" id="buddyText">Hi Ranger! Let's go find Oakley.</div>
+      </div>
+      <div class="buddy-controls">
+        <button class="bctrl" id="buddyMuteBtn" title="Mute">🔊</button>
+        <button class="bctrl" id="buddyCaptionsBtn" title="Toggle captions">💬</button>
+        <button class="bctrl" id="buddyMinBtn" title="Minimize">⌄</button>
+      </div>
+    </div>
+  </div>
+  <button class="buddy-bubble" id="buddyBubble" style="display:none;">
+    <span id="buddyBubbleAv">🍃</span>
+    <span class="buddy-dot" id="buddyDot" style="display:none;"></span>
+  </button>
+
+</div>
+
+
+<script src="native.js"></script><script src="app.js"></script></body>
+</html>
