@@ -1,0 +1,19 @@
+import fs from 'node:fs/promises';
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import {JSDOM,VirtualConsole} from 'jsdom';
+const html=await fs.readFile('www/index.html','utf8'),app=await fs.readFile('www/app.js','utf8');new vm.Script(app);new vm.Script(await fs.readFile('www/native.js','utf8'));
+const errors=[];const vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e));
+function boot(saved){const dom=new JSDOM(html,{url:'https://ranger.test',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:vc});const w=dom.window;w.scrollTo=()=>{};w.confirm=()=>true;w.rangerReady=Promise.resolve();w.RANGER_CONFIG={apiBase:''};w.RangerNative={save:async()=>{},remove:async()=>{},celebrate:()=>{},stopSpeaking:()=>{},stopListening:async()=>{},share:async()=>{},speak:()=>{}};if(saved)w.localStorage.setItem('celestialRangerSave',saved);w.eval(app);return dom;}
+const tick=()=>new Promise(r=>setTimeout(r,0));
+const dom=boot();const w=dom.window;await tick();const d=w.document;const click=id=>d.getElementById(id).click();
+assert.equal(d.querySelectorAll('.onboard-step').length,3);click('stepNext');assert.equal(d.querySelector('.onboard-step:not([hidden])').dataset.step,'1');click('stepNext');assert.equal(d.querySelector('.onboard-step:not([hidden])').dataset.step,'1','Oath is required');d.getElementById('oathCheckbox').checked=true;d.getElementById('oathCheckbox').dispatchEvent(new w.Event('change'));d.getElementById('rangerName').value='Zeynab';click('stepNext');d.querySelector('[data-mode=kid]').click();click('beginBtn');assert(d.getElementById('screen-map').classList.contains('visible'));
+for(let i=0;i<5;i++){click('missionNext');assert(d.getElementById('screen-booth').classList.contains('visible'));const note=d.getElementById('fieldNote');note.value='A bright new discovery '+i;note.dispatchEvent(new w.Event('input'));click('stampBtn');click('stampBtn');click('boothBack');}
+let saved=JSON.parse(w.localStorage.getItem('celestialRangerSave'));assert.equal(saved.visitedOrder.length,5);assert.equal(saved.ecoPoints,110,'No duplicate stamp rewards');click('missionNext');assert.equal(d.getElementById('recapContent').style.display,'block');assert.equal(d.getElementById('certName').textContent,'Zeynab');
+d.querySelector('[data-screen=passport]').click();assert.equal(d.getElementById('personalJournal').children.length,5);
+d.querySelector('[data-screen=chat]').click();d.querySelector('[data-question="How many stamps do I have?"]').click();await tick();assert(d.getElementById('chatLog').textContent.includes('5 of 5'));
+d.querySelector('[data-character=oakley]').click();assert(d.getElementById('chatLog').textContent.includes('Oakley'));
+d.getElementById('chatInput').value='<img src=x onerror=alert(1)>';d.getElementById('chatForm').dispatchEvent(new w.Event('submit',{cancelable:true}));await tick();assert.equal(d.getElementById('chatLog').querySelectorAll('img').length,0,'Messages must remain text');assert(d.getElementById('chatLog').textContent.includes('not connected'));
+d.querySelector('[data-screen=more]').click();d.querySelector('[data-more=food]').click();d.querySelectorAll('.food-card')[0].click();d.querySelectorAll('.food-card')[0].click();assert.equal(JSON.parse(w.localStorage.getItem('celestialRangerSave')).ecoPoints,110,'Snacks cannot farm points');
+const restored=boot(w.localStorage.getItem('celestialRangerSave'));await tick();restored.window.document.getElementById('resumeBtn').click();assert(restored.window.document.getElementById('missionProgress').textContent.includes('5 of 5'));
+assert.deepEqual(errors.map(e=>e.message),[]);dom.window.close();restored.window.close();console.log('PASS: onboarding/oath, five missions, duplicate stamps, notes, certificate, character switching, safe message rendering, snack points, and saved progress restore.');
